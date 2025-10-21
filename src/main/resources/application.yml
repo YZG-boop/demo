@@ -10,10 +10,10 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.example.backend.entity
+  type-aliases-package: com.example.demo.entity
   configuration:
     map-underscore-to-camel-case: true # 下划线转驼峰
 
 jwt:
-  secret: your-secret-key-123456 # 生产环境需更换
+  secret: MVEh2vN3QOePMJE+gkUmf9xsl+I/7djl0ZV5q7dp4e5jg8AhmQy86q14sHq/HgyGQMr3QGQkJHmUu13wm5qURw== # 生产环境需更换
   expiration: 86400000 # 24小时（毫秒）

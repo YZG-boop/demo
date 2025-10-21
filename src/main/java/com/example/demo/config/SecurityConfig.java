@@ -6,13 +6,27 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
 
-    // 注入上面配置的跨域源
-    private final CorsConfigurationSource corsConfigurationSource;
+    // 定义跨域配置源（内部创建，避免依赖注入冲突）
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOrigin("http://localhost:5173");
+        config.setAllowCredentials(true);
+        config.addAllowedMethod("*");
+        config.addAllowedHeader("*");
+        config.setMaxAge(1800L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
     // 密码加密器（BCrypt算法）
     @Bean
@@ -20,20 +34,12 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
-        this.corsConfigurationSource = corsConfigurationSource;
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 启用跨域配置
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                // 关闭 CSRF（开发环境可关闭，生产环境根据需求配置）
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 使用内部跨域配置
                 .csrf(csrf -> csrf.disable())
-                // 允许所有请求访问（根据实际业务调整权限）
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-
         return http.build();
     }
 }
