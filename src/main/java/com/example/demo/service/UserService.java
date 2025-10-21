@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.User;
+import com.example.demo.mapper.UserMapper;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -10,12 +13,18 @@ public class UserService {
 
     // 实际项目中应注入UserMapper查询数据库
     // 此处简化为模拟数据库查询
-    private final PasswordEncoder passwordEncoder;
+    //private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public UserService(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Resource
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Resource
+    private UserMapper userMapper;
+
+//    @Autowired
+//    public UserService(PasswordEncoder passwordEncoder) {
+//        this.passwordEncoder = passwordEncoder;
+//    }
 
     // 根据用户名查询用户（实际应从数据库获取）
     public User getUserByUsername(String username) {
@@ -31,8 +40,19 @@ public class UserService {
         return null;
     }
 
-    // 验证密码
-    public boolean checkPassword(String rawPassword, String encodedPassword) {
+    /**
+     * 根据用户名查询用户
+     */
+    public User findByUsername(String username) {
+        return userMapper.selectByUsername(username);
+    }
+
+    /**
+     * 验证密码
+     * @param rawPassword 明文密码（用户输入）
+     * @param encodedPassword 加密密码（数据库存储）
+     */
+    public boolean verifyPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }

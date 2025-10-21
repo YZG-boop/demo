@@ -1,9 +1,16 @@
 package com.example.demo.utils;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtUtils {
@@ -14,35 +21,53 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private long expiration; // 过期时间（毫秒）
 
-    // 生成Token
+    // 生成签名密钥
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    /**
+     * 生成JWT令牌
+     */
     public String generateToken(String username) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + expiration);
 
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("username", username);
+
         return Jwts.builder()
-                .setSubject(username) // 存储用户名
-                .setIssuedAt(now) // 签发时间
-                .setExpiration(expirationDate) // 过期时间
-                .signWith(SignatureAlgorithm.HS512, secret) // 签名算法+密钥
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expirationDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 从Token中获取用户名
+    /**
+     * 从令牌中获取用户名
+     */
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret)
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return claims.getSubject();
+        return claims.get("username", String.class);
     }
 
-    // 验证Token有效性
+    /**
+     * 验证令牌是否有效
+     */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false; // Token无效或过期
+        } catch (Exception e) {
+            return false; // 令牌无效或过期
         }
     }
 }
