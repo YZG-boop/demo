@@ -46,6 +46,8 @@ public class AuthController {
 
         // 3. 生成JWT Token
         String token = jwtUtils.generateToken(user.getUsername());
+        System.out.println(token);
+        Result<String> success = Result.success(token);
         return Result.success(token);
     }
 }
